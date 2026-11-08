@@ -1,0 +1,137 @@
+name: Android emulator
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: android-emulator-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+  smoke:
+    name: Smoke tests on emulator
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download the demo APK
+        run: npm run app:download
+
+      - name: Install the UiAutomator2 driver
+        run: npm run appium:setup
+
+      - name: Cache the AVD snapshot
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-android-34-google-apis-x86_64-pixel_6
+
+      - name: Create the AVD snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          avd-name: mda_api_34
+          ram-size: 2048M
+          disk-size: 2048M
+          force-avd-creation: false
+          disable-animations: false
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run the smoke suite
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          avd-name: mda_api_34
+          ram-size: 2048M
+          disk-size: 2048M
+          force-avd-creation: false
+          disable-animations: true
+          disable-spellchecker: true
+          emulator-boot-timeout: 600
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: npm run test:smoke:ci
+
+      - name: Generate the Allure report
+        if: always()
+        run: npm run report || true
+
+      - name: Upload Allure results, the report, and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-smoke
+          if-no-files-found: warn
+          path: |
+            allure-results
+            allure-report
+            screenshots
+            logs

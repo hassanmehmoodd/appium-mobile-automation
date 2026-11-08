@@ -1,0 +1,70 @@
+name: Kobiton
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: kobiton-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  kobiton:
+    name: Smoke tests on Kobiton
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Kobiton secrets
+        id: secrets
+        env:
+          KOBITON_USERNAME: ${{ secrets.KOBITON_USERNAME }}
+          KOBITON_API_KEY: ${{ secrets.KOBITON_API_KEY }}
+        run: |
+          if [ -n "$KOBITON_USERNAME" ] && [ -n "$KOBITON_API_KEY" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "KOBITON_USERNAME or KOBITON_API_KEY is not configured. Skipping the Kobiton run."
+          fi
+
+      - name: Set up Node.js
+        if: steps.secrets.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.secrets.outputs.present == 'true'
+        run: npm ci
+
+      - name: Run the smoke suite on Kobiton
+        if: steps.secrets.outputs.present == 'true'
+        env:
+          KOBITON_USERNAME: ${{ secrets.KOBITON_USERNAME }}
+          KOBITON_API_KEY: ${{ secrets.KOBITON_API_KEY }}
+          KOBITON_DEVICE_NAME: ${{ secrets.KOBITON_DEVICE_NAME }}
+          KOBITON_DEVICE_GROUP: ${{ secrets.KOBITON_DEVICE_GROUP }}
+          KOBITON_APP_URL: ${{ secrets.KOBITON_APP_URL }}
+        run: npm run test:kobiton
+
+      - name: Generate the Allure report
+        if: always() && steps.secrets.outputs.present == 'true'
+        run: npm run report || true
+
+      - name: Upload Allure results, the report, and screenshots
+        if: always() && steps.secrets.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-kobiton
+          if-no-files-found: warn
+          path: |
+            allure-results
+            allure-report
+            screenshots
+            logs
