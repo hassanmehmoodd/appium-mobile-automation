@@ -15,7 +15,7 @@
   },
   "scripts": {
     "app:download": "node scripts/download-apk.mjs",
-    "appium:setup": "appium driver install uiautomator2@4.2.9",
+    "appium:setup": "bash scripts/install-driver.sh",
     "emulator:start": "bash scripts/start-emulator.sh",
     "test": "wdio run config/wdio.local.conf.ts",
     "test:smoke": "wdio run config/wdio.local.conf.ts --suite smoke",
