@@ -13,6 +13,20 @@ export async function useThreeButtonNavigation(): Promise<void> {
   }
 }
 
+export async function dismissAnrIfPresent(): Promise<void> {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const buttons = await $$('android=new UiSelector().text("Wait")').getElements();
+    if (buttons.length === 0) {
+      return;
+    }
+    const visible = await buttons[0].isDisplayed().catch(() => false);
+    if (!visible) {
+      return;
+    }
+    await buttons[0].click();
+  }
+}
+
 export async function relaunchApp(): Promise<void> {
   try {
     await browser.execute('mobile: terminateApp', { appId: APP_PACKAGE });
@@ -21,6 +35,12 @@ export async function relaunchApp(): Promise<void> {
   }
   await browser.execute('mobile: activateApp', { appId: APP_PACKAGE });
   await grantRuntimePromptIfShown();
+  await dismissAnrIfPresent();
   const menu = await $('~View menu');
-  await menu.waitForDisplayed({ timeout: 30_000 });
+  try {
+    await menu.waitForDisplayed({ timeout: 20_000 });
+  } catch {
+    await dismissAnrIfPresent();
+    await menu.waitForDisplayed({ timeout: 20_000 });
+  }
 }

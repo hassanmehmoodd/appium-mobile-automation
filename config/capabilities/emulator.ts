@@ -5,9 +5,14 @@ import { appUnderTest, localApkPath } from '../app-meta.js';
  * Local and CI both boot the emulator outside Appium, then attach.
  */
 export function emulatorCapabilities(
-  timeouts: { adbExecTimeout: number; installTimeout: number } = {
+  timeouts: {
+    adbExecTimeout: number;
+    installTimeout: number;
+    unicodeKeyboard?: boolean;
+  } = {
     adbExecTimeout: 60_000,
     installTimeout: 120_000,
+    unicodeKeyboard: true,
   },
 ): WebdriverIO.Capabilities[] {
   const app = appUnderTest();
@@ -27,8 +32,8 @@ export function emulatorCapabilities(
     'appium:androidInstallTimeout': timeouts.installTimeout,
     'appium:uiautomator2ServerInstallTimeout': timeouts.installTimeout,
     'appium:uiautomator2ServerLaunchTimeout': timeouts.installTimeout,
-    'appium:unicodeKeyboard': true,
-    'appium:resetKeyboard': true,
+    'appium:unicodeKeyboard': timeouts.unicodeKeyboard !== false,
+    'appium:resetKeyboard': timeouts.unicodeKeyboard !== false,
     'appium:ignoreHiddenApiPolicyError': true,
     'appium:disableWindowAnimation': true,
   };
