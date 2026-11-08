@@ -1,0 +1,10 @@
+{
+  "name": "Sauce Labs My Demo App Android",
+  "version": "2.3.0",
+  "package": "com.saucelabs.mydemoapp.android",
+  "activity": "com.saucelabs.mydemoapp.android.view.activities.SplashActivity",
+  "apkUrl": "https://github.com/saucelabs/my-demo-app-android/releases/download/2.3.0/mda-2.3.0-27.apk",
+  "apkFile": "apps/mda-2.3.0-27.apk",
+  "source": "https://github.com/saucelabs/my-demo-app-android",
+  "sha256": "bd3a3d6f2d50e076b2701ed2cc6a0ca82157b40a7033cf5be9f5d084b6591ec8"
+}
