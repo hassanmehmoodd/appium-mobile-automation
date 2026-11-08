@@ -1,0 +1,23 @@
+[
+  {
+    "title": "rejects an empty username @regression",
+    "username": "",
+    "password": "10203040",
+    "expectedError": "Username is required",
+    "errorField": "username"
+  },
+  {
+    "title": "rejects an empty password @regression",
+    "username": "bod@example.com",
+    "password": "",
+    "expectedError": "Enter Password",
+    "errorField": "password"
+  },
+  {
+    "title": "rejects the locked-out user @regression",
+    "username": "alice@example.com",
+    "password": "10203040",
+    "expectedError": "Sorry this user has been locked out.",
+    "errorField": "password"
+  }
+]

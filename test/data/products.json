@@ -1,0 +1,21 @@
+{
+  "backpack": {
+    "name": "Sauce Labs Backpack",
+    "price": "29.99",
+    "descriptionIncludes": "Sly Pack"
+  },
+  "priceAscendingFirst": {
+    "name": "Sauce Labs Onesie",
+    "price": "7.99"
+  },
+  "nameDescendingFirst": {
+    "name": "Test.allTheThings() T-Shirt (yellow)"
+  },
+  "details": [
+    {
+      "name": "Sauce Labs Onesie",
+      "price": "7.99",
+      "descriptionIncludes": "infant onesie"
+    }
+  ]
+}
