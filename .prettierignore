@@ -3,6 +3,7 @@ dist
 coverage
 allure-results
 allure-report
+docs/reports
 apps
 logs
 screenshots
