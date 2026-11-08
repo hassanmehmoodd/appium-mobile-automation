@@ -2,7 +2,7 @@ node_modules/
 dist/
 coverage/
 logs/
-screenshots/
+/screenshots/
 allure-results/
 allure-report/
 apps/*.apk
@@ -15,4 +15,3 @@ apps/*.apk
 .idea/
 .vscode/
 *.apk
-!docs/**/*.png
